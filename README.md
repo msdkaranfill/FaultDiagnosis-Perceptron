@@ -1,3 +1,4 @@
+the project has been implemented as a part of the class, "Diagnostics and Testing" in CVUT, term of 22-23 Winter.
 inner_X, normal_X, outer_X are saved files within code,
 representing features for three different classes.
 ShowSignal is implemented to make figures for the essay,
