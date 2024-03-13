@@ -1,0 +1,145 @@
+Index: main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/main.py b/main.py
+--- a/main.py	
++++ b/main.py	(date 1672710641872)
+@@ -6,33 +6,8 @@
+ from Functions.Extract_Features import signalanalyser
+ from Functions.Extract_Features import load_samples
+ from Functions.Extract_Features import load_trn_tst_examples
+-
++import matplotlib.pyplot as plt
+ 
+-def display_data(normal, inner, outer):
+-    tmp = np.array(list(combinations(np.arange(0, normal.shape[0]), 2)))
+-    lns = np.hstack([np.zeros(normal.shape[0]), np.ones(
+-            inner.shape[0]), np.ones(outer.shape[0])*2])
+-    J3 = np.zeros(len(tmp))
+-    features = np.concatenate([normal, inner, outer], axis=0)
+-    for ix in range(len(tmp)):
+-        J3[ix] = ScattMat(np.c_[features[:, tmp[ix, 0]], features[:, tmp[ix, 1]]], lns)
+-    ix = np.argsort(J3)[::-1]
+-    J3 = J3[ix]
+-    print(J3)
+-    np.save("myJ3.npy", J3)
+-    df = pd.DataFrame(wf)
+-    #for i in range(len(writefile["X"])):
+-     #   for j in range(writefile["X"][i].shape[0]):
+-
+-#down: (<class 'ValueError'>, ValueError('could not broadcast input array
+-    # from shape (15,12) into shape (15,)'), <traceback object at 0x000001A13A297BC0>)
+-    writefile["X"] = np.asarray(writefile["X"], dtype=object)
+-    writefile["Y"] = np.asarray(writefile["Y"], dtype=object)
+-
+-    all_TRN_TRX = np.load("alldata.npz", allow_pickle=True)
+-    print(all_TRN_TRX["X"])
+-    print("iteration:", j)
+-    assert len(all_TRN_TRX["X"]), len(all_TRN_TRX["Y"])
+ 
+ 
+ def predictclass(w, x):
+@@ -46,6 +21,7 @@
+         return max(set(a), key=a.count)
+ 
+     else:
++        print(x.ndim)
+         return np.argmax(np.dot(w.T,np.insert(x, 0, 1, axis=0)))
+ 
+ 
+@@ -67,7 +43,6 @@
+     error = 500
+     while error > 0:
+         #set to zero before each sample of trn_Y
+-
+         for i in range(len(y)): #every signal with min. length
+             argmax = predictclass(w, x[:, i])
+             predicted_y = classes[argmax]
+@@ -98,6 +73,7 @@
+             error += 1
+ 
+     error_rate = error / counter
++    print(error_rate)
+     return error_rate
+ 
+ 
+@@ -116,6 +92,60 @@
+     return output[predictclass(w, X_)]
+ 
+ 
++def display_data(normal, inner, outer):
++    feature_names = ['MEAN','STD','RMS','SK','KUR','SF','CF',
++                    'IF','MF','PEAK','P2P', 'TALAF', 'THIKAT', 'BPFO', 'BPFI']
++
++    features = np.hstack([normal, inner])
++    features = np.hstack([features, outer])
++
++    print(features.shape)
++    ix_normal = np.arange(0, normal.shape[1]).T
++    ix_outer = np.arange(normal.shape[1], normal.shape[1] + outer.shape[1]).T
++    ix_inner = np.arange(normal.shape[1] + outer.shape[1], normal.shape[1] +
++                         outer.shape[1] + inner.shape[1]).T
++    print(ix_normal, ix_inner, ix_outer)
++    plt.rc('font', size=14)
++    print(features.shape)
++    plt.figure(1, figsize=(12, 6))
++    tmp = np.array(list(combinations(np.arange(0, normal.shape[0]), 2)))
++    lns = np.hstack([np.zeros(normal.shape[0]), np.ones(
++            inner.shape[0]), np.ones(outer.shape[0])*2])
++    for ix in range(len(feature_names)):
++        plt.scatter(ix * np.ones(ix_normal.shape[0]), features[ix,
++                        ix_normal], c='b', marker='o', s=80, alpha=0.5)
++        print(features[ix,ix_normal])
++        plt.scatter(ix * np.ones(ix_outer.shape[0]), features[ix,
++                            ix_outer], c='r', marker='x', s=80, alpha=0.5)
++        plt.scatter(ix * np.ones(ix_inner.shape[0]), features[ix,
++                            ix_inner], c='g', marker='d', s=80, alpha=0.5)
++
++    plt.xticks(range(len(feature_names)), feature_names)
++    plt.xlim(-1, len(feature_names))
++    plt.legend(['Healthy', 'Outer', 'Inner'])
++    plt.title('Feature of CWRU bearing')
++    plt.ylabel('Normalized value');
++    plt.grid()
++    plt.show()
++    """
++    J3 = np.zeros(len(tmp))
++    features = np.concatenate([normal, inner, outer], axis=0)
++    for ix in range(len(tmp)):
++        J3[ix] = ScattMat(np.c_[features[:, tmp[ix, 0]], features[:, tmp[ix, 1]]], lns)
++    ix = np.argsort(J3)[::-1]
++    J3 = J3[ix]
++    df = pd.DataFrame(wf)
++    #for i in range(len(writefile["X"])):
++     #   for j in range(writefile["X"][i].shape[0]):
++    writefile["X"] = np.asarray(writefile["X"], dtype=object)
++    writefile["Y"] = np.asarray(writefile["Y"], dtype=object)
++
++    all_TRN_TRX = np.load("alldata.npz", allow_pickle=True)
++    print(all_TRN_TRX["X"])
++    print("iteration:", j)
++    assert len(all_TRN_TRX["X"]), len(all_TRN_TRX["Y"])
++    """
++
+ 
+ 
+ 
+@@ -125,12 +155,13 @@
+     normal_x = np.load("normal_X.npy")
+     inner_x = np.load("inner_X.npy")
+     outer_x = np.load("outer_X.npy")
++    #display_data(normal_x, inner_x, outer_x)
+     trn_X, trn_Y, tst_X, tst_Y = load_trn_tst_examples(normal_x, inner_x, outer_x)
+-    # w = trainclassifier(trn_X, trn_Y)
++    w = trainclassifier(trn_X, trn_Y)
+     # np.save("trained_weight.npy", w)
+-    w = np.load("trained_weight.npy")
++    #w = np.load("trained_weight.npy")
+     tstclassifier(w, tst_X, tst_Y)
+-    print(tstsinglefile(w, "InnerRace.mat"))
++    #print(tstsinglefile(w, "InnerRaceFault_vload_1.mat"))
+ 
+ 
+ 
